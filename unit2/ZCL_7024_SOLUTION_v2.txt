@@ -1,0 +1,113 @@
+CLASS zcl_7024_solution DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
+
+  PUBLIC SECTION.
+    INTERFACES if_oo_adt_classrun .
+
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+
+    " Local class definitions would already exist in your copied class
+    " (LCL_CARRIER, LCL_PASSENGER_FLIGHT, etc.)
+
+ENDCLASS.
+
+
+
+CLASS zcl_7024_solution IMPLEMENTATION.
+
+
+  METHOD if_oo_adt_classrun~main.
+
+    CONSTANTS c_carrier_id TYPE /dmo/carrier_id VALUE 'LH'.
+
+    TRY.
+        DATA(carrier) = NEW lcl_carrier(  i_carrier_id = c_carrier_id ).
+
+        out->write(  name = `Carrier Overview`
+                     data = carrier->get_output(  ) ).
+
+      CATCH cx_abap_invalid_value.
+        out->write( | Carrier { c_carrier_id } does not exist | ).
+    ENDTRY.
+
+    IF carrier IS BOUND.
+
+      out->write(  `--------------------------------------------------` ).
+
+      DATA(today) = cl_abap_context_info=>get_system_date(  ).
+
+      carrier->find_passenger_flight(
+         EXPORTING
+           i_airport_from_id = 'FRA'
+           i_airport_to_id   = 'JFK'
+           i_from_date       = today
+           i_seats           = 5
+         IMPORTING
+           e_flight =     DATA(pass_flight)
+           e_days_later = DATA(days_later)
+                         ).
+
+      IF pass_flight IS BOUND.
+        out->write( name = |Found a suitable passenger flight in { days_later } days:|
+                    data = pass_flight->get_description( ) ).
+      ELSE.
+        out->write( data = `No Passenger Flight found` ).
+      ENDIF.
+
+      out->write(  `--------------------------------------------------` ).
+
+      carrier->find_cargo_flight(
+         EXPORTING
+           i_airport_from_id = 'FRA'
+           i_airport_to_id   = 'JFK'
+           i_from_date       = today
+           i_cargo           = 1200
+         IMPORTING
+           e_flight =     DATA(cargo_flight)
+           e_days_later = DATA(days_later2)
+                         ).
+
+      IF cargo_flight IS BOUND.
+        out->write( name = |Found a suitable cargo flight in { days_later2 } days:|
+                    data = cargo_flight->get_description( ) ).
+      ELSE.
+        out->write( data = `No cargo flight found` ).
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+
+  METHOD lcl_passenger_flight~get_description.
+
+*   APPEND |Flight { carrier_id } { connection_id } on { flight_date DATE = USER } | &&
+*          |from { connection_details-airport_from_id } to { connection_details-airport_to_id } |
+*          TO r_result.
+
+    DATA txt TYPE string.
+
+    txt = 'Flight &carrid& &connid& on &date& from &from& to &to&'(005).
+    txt = replace( val = txt sub = '&carrid&' with = carrier_id ).
+    txt = replace( val = txt sub = '&connid&' with = connection_id ).
+    txt = replace( val = txt sub = '&date&'   with = |{ flight_date DATE = USER }| ).
+    txt = replace( val = txt sub = '&from&'   with = connection_details-airport_from_id ).
+    txt = replace( val = txt sub = '&to&'     with = connection_details-airport_to_id ).
+
+    APPEND txt TO r_result.
+
+    APPEND |{ 'Planetype:'(006)      } { planetype  } | TO r_result.
+    APPEND |{ 'Maximum Seats:'(007)  } { seats_max  } | TO r_result.
+    APPEND |{ 'Occupied Seats:'(008) } { seats_occ  } | TO r_result.
+    APPEND |{ 'Free Seats:'(009)     } { seats_free } | TO r_result.
+    APPEND |{ 'Ticket Price:'(010)   } { price CURRENCY = currency } { currency } | TO r_result.
+    APPEND |{ 'Duration:'(011)       } { connection_details-duration } { 'minutes'(012) } | TO r_result.
+
+  ENDMETHOD.
+
+
+ENDCLASS.
