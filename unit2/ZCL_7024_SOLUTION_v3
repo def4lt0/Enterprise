@@ -1,0 +1,167 @@
+CLASS zcl_7024_solution DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
+
+  PUBLIC SECTION.
+    INTERFACES if_oo_adt_classrun .
+
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+
+*---------------------------------------------------------------------*
+* Local Class: Passenger Flight
+*---------------------------------------------------------------------*
+    CLASS lcl_passenger_flight DEFINITION.
+      PUBLIC SECTION.
+
+        TYPES: BEGIN OF st_flights_buffer,
+                 carrier_id     TYPE /lrn/passflight-carrier_id,
+                 connection_id  TYPE /lrn/passflight-connection_id,
+                 flight_date    TYPE /lrn/passflight-flight_date,
+                 plane_type_id  TYPE /lrn/passflight-plane_type_id,
+                 seats_max      TYPE /lrn/passflight-seats_max,
+                 seats_occupied TYPE /lrn/passflight-seats_occupied,
+                 seats_free     TYPE i,
+                 price          TYPE /lrn/passflight-price,
+                 currency_code  TYPE /lrn/passflight-currency_code,
+               END OF st_flights_buffer.
+
+        CLASS-DATA flights_buffer TYPE STANDARD TABLE OF st_flights_buffer.
+
+        METHODS:
+          constructor
+            IMPORTING
+              i_carrier_id    TYPE /dmo/carrier_id
+              i_connection_id TYPE /dmo/connection_id
+              i_flight_date   TYPE /dmo/flight_date,
+
+          get_flights_by_carrier
+            IMPORTING i_carrier_id TYPE /dmo/carrier_id,
+
+          get_description
+            RETURNING VALUE(r_result) TYPE STANDARD TABLE OF string.
+
+      PRIVATE SECTION.
+        DATA:
+          planetype TYPE string,
+          seats_max TYPE i,
+          seats_occ TYPE i,
+          seats_free TYPE i,
+          price TYPE /dmo/flight_price,
+          currency TYPE /dmo/currency_code.
+    ENDCLASS.
+
+*---------------------------------------------------------------------*
+* Local Class: Carrier
+*---------------------------------------------------------------------*
+    CLASS lcl_carrier DEFINITION.
+      PUBLIC SECTION.
+        METHODS:
+          constructor
+            IMPORTING i_carrier_id TYPE /dmo/carrier_id.
+
+      PRIVATE SECTION.
+        DATA:
+          name TYPE string,
+          currency_code TYPE /dmo/currency_code.
+    ENDCLASS.
+
+ENDCLASS.
+
+
+
+CLASS zcl_7024_solution IMPLEMENTATION.
+
+*---------------------------------------------------------------------*
+* MAIN METHOD
+*---------------------------------------------------------------------*
+  METHOD if_oo_adt_classrun~main.
+
+    DATA(result) TYPE STANDARD TABLE OF string.
+
+    SELECT FROM /dmo/flight
+      FIELDS seats_max,
+             seats_occupied,
+             seats_max - seats_occupied AS seats_available,
+             ( CAST( seats_occupied AS FLTP )
+               * CAST( 100 AS FLTP )
+             ) / CAST( seats_max AS FLTP ) AS percentage_fltp
+      INTO TABLE @DATA(sql_result).
+
+    out->write( data = sql_result name = 'RESULT' ).
+
+  ENDMETHOD.
+
+*---------------------------------------------------------------------*
+* PASSENGER FLIGHT IMPLEMENTATION
+*---------------------------------------------------------------------*
+  METHOD lcl_passenger_flight~get_flights_by_carrier.
+
+    SELECT
+      FROM /lrn/passflight
+    FIELDS carrier_id, connection_id, flight_date,
+           plane_type_id, seats_max, seats_occupied,
+           seats_max - seats_occupied AS seats_free,
+           price, currency_code
+     WHERE carrier_id = @i_carrier_id
+     INTO TABLE @flights_buffer.
+
+  ENDMETHOD.
+
+
+  METHOD lcl_passenger_flight~constructor.
+
+    DATA flight_raw TYPE st_flights_buffer.
+
+    SELECT SINGLE
+        FROM /lrn/passflight
+      FIELDS plane_type_id,
+             seats_max, seats_occupied,
+             seats_max - seats_occupied AS seats_free,
+             price, currency_code
+       WHERE carrier_id    = @i_carrier_id
+         AND connection_id = @i_connection_id
+         AND flight_date   = @i_flight_date
+       INTO CORRESPONDING FIELDS OF @flight_raw.
+
+    planetype = flight_raw-plane_type_id.
+    seats_max = flight_raw-seats_max.
+    seats_occ = flight_raw-seats_occupied.
+    seats_free = flight_raw-seats_free.
+    price = flight_raw-price.
+    currency = flight_raw-currency_code.
+
+  ENDMETHOD.
+
+
+*---------------------------------------------------------------------*
+* STRING OUTPUT METHOD
+*---------------------------------------------------------------------*
+  METHOD lcl_passenger_flight~get_description.
+
+    DATA txt TYPE string.
+
+    txt = 'Free seats: &free&'(005).
+    txt = replace( val = txt sub = '&free&' with = seats_free ).
+
+    APPEND txt TO r_result.
+
+  ENDMETHOD.
+
+
+*---------------------------------------------------------------------*
+* CARRIER IMPLEMENTATION
+*---------------------------------------------------------------------*
+  METHOD lcl_carrier~constructor.
+
+    SELECT SINGLE
+        FROM /lrn/carrier
+*       FIELDS name, currency_code
+        FIELDS concat_with_space( carrier_id, name, 1 ), currency_code
+     WHERE carrier_id = @i_carrier_id
+     INTO ( @me->name, @me->currency_code ).
+
+  ENDMETHOD.
+
+ENDCLASS.
