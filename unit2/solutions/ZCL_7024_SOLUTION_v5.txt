@@ -1,0 +1,94 @@
+CLASS zcl_7024_solution DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC.
+
+  PUBLIC SECTION.
+    INTERFACES if_oo_adt_classrun.
+
+  PRIVATE SECTION.
+
+*---------------------------------------------------------------------*
+* Local Class: Carrier
+*---------------------------------------------------------------------*
+    CLASS lcl_carrier DEFINITION.
+      PUBLIC SECTION.
+
+        CLASS-METHODS get_instance
+          IMPORTING
+            i_carrier_id TYPE /dmo/carrier_id
+          RETURNING
+            VALUE(r_result) TYPE REF TO lcl_carrier
+          RAISING
+            zcx_7024_failed.
+
+        METHODS get_output
+          RETURNING VALUE(rt_output) TYPE STANDARD TABLE OF string.
+
+      PRIVATE SECTION.
+        DATA carrier_id TYPE /dmo/carrier_id.
+    ENDCLASS.
+
+ENDCLASS.
+
+
+
+CLASS zcl_7024_solution IMPLEMENTATION.
+
+*---------------------------------------------------------------------*
+* Carrier Implementation
+*---------------------------------------------------------------------*
+  METHOD lcl_carrier~get_instance.
+
+    " Simulate NOT FOUND
+    IF i_carrier_id = 'XX'.
+      RAISE EXCEPTION TYPE zcx_7024_failed
+        EXPORTING
+          textid     = zcx_7024_failed=>carrier_not_exist
+          carrier_id = i_carrier_id.
+    ENDIF.
+
+    " Simulate AUTH ERROR
+    IF i_carrier_id = 'UA'.
+      RAISE EXCEPTION TYPE zcx_7024_failed
+        EXPORTING
+          textid     = zcx_7024_failed=>carrier_no_read_auth
+          carrier_id = i_carrier_id.
+    ENDIF.
+
+    " Otherwise create object
+    r_result = NEW lcl_carrier( ).
+    r_result->carrier_id = i_carrier_id.
+
+  ENDMETHOD.
+
+*---------------------------------------------------------------------*
+  METHOD lcl_carrier~get_output.
+    APPEND |Carrier: { carrier_id }| TO rt_output.
+  ENDMETHOD.
+
+*---------------------------------------------------------------------*
+* Main Method
+*---------------------------------------------------------------------*
+  METHOD if_oo_adt_classrun~main.
+
+    CONSTANTS c_carrier_id TYPE /dmo/carrier_id VALUE 'XX'.
+
+    TRY.
+
+        DATA(carrier) = lcl_carrier=>get_instance(
+                          i_carrier_id = c_carrier_id ).
+
+        out->write(
+          name = 'Carrier Overview'
+          data = carrier->get_output( )
+        ).
+
+      CATCH zcx_7024_failed INTO DATA(exc_fail).
+        out->write( exc_fail->get_text( ) ).
+
+    ENDTRY.
+
+  ENDMETHOD.
+
+ENDCLASS.
