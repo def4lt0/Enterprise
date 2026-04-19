@@ -1,0 +1,103 @@
+CLASS zcl_7024_solution_3 DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC.
+
+  PUBLIC SECTION.
+    INTERFACES if_oo_adt_classrun.
+
+  PRIVATE SECTION.
+
+*---------------------------------------------------------------------*
+* Local Interface
+*---------------------------------------------------------------------*
+    INTERFACE lif_output.
+      TYPES:
+        t_output  TYPE string,
+        tt_output TYPE STANDARD TABLE OF t_output WITH NON-UNIQUE DEFAULT KEY.
+
+      METHODS get_output
+        RETURNING VALUE(r_result) TYPE tt_output.
+    ENDINTERFACE.
+
+*---------------------------------------------------------------------*
+* Local Class: Carrier
+*---------------------------------------------------------------------*
+    CLASS lcl_carrier DEFINITION.
+      PUBLIC SECTION.
+
+        INTERFACES lif_output.
+
+        ALIASES get_output FOR lif_output~get_output.
+
+        METHODS constructor IMPORTING name TYPE string.
+
+      PRIVATE SECTION.
+        DATA name TYPE string.
+        DATA pf_count TYPE i VALUE 100.
+        DATA cf_count TYPE i VALUE 50.
+
+        METHODS get_average_free_seats RETURNING VALUE(rv_avg) TYPE i.
+    ENDCLASS.
+
+*---------------------------------------------------------------------*
+* Local Class: Flight
+*---------------------------------------------------------------------*
+    CLASS lcl_flight DEFINITION ABSTRACT.
+      PUBLIC SECTION.
+
+        INTERFACES lif_output.
+
+        METHODS get_description
+          RETURNING VALUE(rt_result) TYPE lif_output=>tt_output.
+    ENDCLASS.
+
+ENDCLASS.
+
+
+
+CLASS zcl_7024_solution_3 IMPLEMENTATION.
+
+*---------------------------------------------------------------------*
+* Carrier Implementation
+*---------------------------------------------------------------------*
+  METHOD lcl_carrier~constructor.
+    me->name = name.
+  ENDMETHOD.
+
+  METHOD lcl_carrier~get_average_free_seats.
+    rv_avg = 42.
+  ENDMETHOD.
+
+  METHOD lcl_carrier~lif_output~get_output.
+    APPEND |Carrier Name: { me->name }| TO r_result.
+    APPEND |Passenger Flights: { pf_count }| TO r_result.
+    APPEND |Average free seats: { get_average_free_seats( ) }| TO r_result.
+    APPEND |Cargo Flights: { cf_count }| TO r_result.
+  ENDMETHOD.
+
+*---------------------------------------------------------------------*
+* Flight Implementation
+*---------------------------------------------------------------------*
+  METHOD lcl_flight~get_description.
+    APPEND |Generic Flight Description| TO rt_result.
+  ENDMETHOD.
+
+  METHOD lcl_flight~lif_output~get_output.
+    r_result = get_description( ).
+  ENDMETHOD.
+
+*---------------------------------------------------------------------*
+* Main Runner (so you can test it)
+*---------------------------------------------------------------------*
+  METHOD if_oo_adt_classrun~main.
+    DATA(lo_carrier) = NEW lcl_carrier( name = 'Lufthansa' ).
+    DATA(lt_output) = lo_carrier->get_output( ).
+
+    LOOP AT lt_output INTO DATA(line).
+      out->write( line ).
+    ENDLOOP.
+  ENDMETHOD.
+
+ENDCLASS.
+ 
