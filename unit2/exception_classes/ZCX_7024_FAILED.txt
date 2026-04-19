@@ -1,0 +1,72 @@
+CLASS zcx_7024_failed DEFINITION
+  PUBLIC
+  INHERITING FROM cx_static_check
+  FINAL
+  CREATE PUBLIC.
+
+  PUBLIC SECTION.
+
+    INTERFACES if_t100_message.
+    INTERFACES if_t100_dyn_msg.
+
+*---------------------------------------------------------------------*
+* Text IDs
+*---------------------------------------------------------------------*
+    CONSTANTS:
+      BEGIN OF carrier_not_exist,
+        msgid TYPE symsgid VALUE 'Z7024_MESSAGES',
+        msgno TYPE symsgno VALUE '010',
+        attr1 TYPE scx_attrname VALUE 'carrier_id',
+        attr2 TYPE scx_attrname VALUE '',
+        attr3 TYPE scx_attrname VALUE '',
+        attr4 TYPE scx_attrname VALUE '',
+      END OF carrier_not_exist,
+
+      BEGIN OF carrier_no_read_auth,
+        msgid TYPE symsgid VALUE 'Z7024_MESSAGES',
+        msgno TYPE symsgno VALUE '020',
+        attr1 TYPE scx_attrname VALUE 'carrier_id',
+        attr2 TYPE scx_attrname VALUE '',
+        attr3 TYPE scx_attrname VALUE '',
+        attr4 TYPE scx_attrname VALUE '',
+      END OF carrier_no_read_auth.
+
+*---------------------------------------------------------------------*
+* Attribute
+*---------------------------------------------------------------------*
+    DATA carrier_id TYPE /dmo/carrier_id READ-ONLY.
+
+*---------------------------------------------------------------------*
+* Constructor
+*---------------------------------------------------------------------*
+    METHODS constructor
+      IMPORTING
+        textid    LIKE if_t100_message=>t100key OPTIONAL
+        previous  LIKE previous OPTIONAL
+        carrier_id TYPE /dmo/carrier_id OPTIONAL.
+
+ENDCLASS.
+
+
+
+CLASS zcx_7024_failed IMPLEMENTATION.
+
+  METHOD constructor ##ADT_SUPPRESS_GENERATION.
+
+    super->constructor( previous = previous ).
+
+    " Assign message
+    IF textid IS INITIAL.
+      if_t100_message~t100key = if_t100_message=>default_textid.
+    ELSE.
+      if_t100_message~t100key = textid.
+    ENDIF.
+
+    " Assign attribute
+    IF carrier_id IS NOT INITIAL.
+      me->carrier_id = carrier_id.
+    ENDIF.
+
+  ENDMETHOD.
+
+ENDCLASS.
