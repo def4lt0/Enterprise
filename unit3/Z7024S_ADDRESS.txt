@@ -1,0 +1,9 @@
+ define structure z7024s_address
+{
+
+street : /dmo/street;
+postal_code : /dmo/postal_code;
+city : /dmo/city;
+country : land1;
+
+} 
