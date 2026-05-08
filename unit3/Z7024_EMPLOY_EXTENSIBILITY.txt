@@ -1,0 +1,4 @@
+@AbapCatalog.enhancement.category    : #EXTENSIBLE_CHARACTER_NUMERIC
+@AbapCatalog.enhancement.fieldSuffix : 'ZEM'
+ 
+-- (rest of existing Z7024EMPLOY table definition remains unchanged)
