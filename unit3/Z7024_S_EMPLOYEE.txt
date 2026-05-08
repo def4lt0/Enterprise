@@ -1,0 +1,7 @@
+@EndUserText.label: 'Employee (Append Structure)'
+@AbapCatalog.enhancement.category: #NOT_EXTENSIBLE
+ 
+extend type z7024employ with z7024_s_ext_employee {
+  zztitle_zem   : /dmo/title;
+  zzcountry_zem : land1;
+}
