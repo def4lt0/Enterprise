@@ -1,0 +1,40 @@
+@Metadata.layer: #CORE
+ 
+annotate view Z7024_C_EmployeeQueryP
+    with parameters
+        @EndUserText.label: 'Target Currency'
+        p_target_curr,
+        @EndUserText.label: 'Date of evaluation'
+        @Environment.systemField: #SYSTEM_DATE
+        p_date
+{
+    @EndUserText.label: 'Employee ID'
+    EmployeeId;
+ 
+    @EndUserText.label: 'First Name'
+    FirstName;
+ 
+    @EndUserText.label: 'Last Name'
+    LastName;
+ 
+    @EndUserText.label: 'Department ID'
+    DepartmentID;
+ 
+    @EndUserText.label: 'Department Description'
+    DepartmentDescription;
+ 
+    @EndUserText.label: 'Assistant Name'
+    AssistantName;
+ 
+    @EndUserText.label: 'Company Affiliation (Years)'
+    CompanyAffiliation;
+ 
+    @EndUserText.label: 'Currency Code'
+    CurrencyCodeUSD;
+ 
+    @EndUserText.label: 'Annual Salary'
+    AnnualSalaryConverted;
+ 
+    @EndUserText.label: 'Monthly Salary'
+    MonthlySalaryConverted;
+}
