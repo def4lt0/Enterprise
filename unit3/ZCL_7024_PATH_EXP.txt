@@ -1,0 +1,36 @@
+CLASS zcl_7024_path_exp DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC.
+ 
+  PUBLIC SECTION.
+    INTERFACES if_oo_adt_classrun.
+ENDCLASS.
+ 
+ 
+CLASS zcl_7024_path_exp IMPLEMENTATION.
+ 
+  METHOD if_oo_adt_classrun~main.
+ 
+* Data selection
+**********************************************************************
+ 
+    SELECT
+      FROM Z7024_C_EmployeeQuery
+    FIELDS employeeid,
+           firstname,
+           lastname,
+           departmentid,
+           departmentdescription,
+           assistantname,
+           \_department\_head-lastname AS headname
+    INTO TABLE @DATA(result).
+ 
+* Output
+**********************************************************************
+    out->write( data = result
+                name = 'Selection result' ).
+ 
+  ENDMETHOD.
+ 
+ENDCLASS.
